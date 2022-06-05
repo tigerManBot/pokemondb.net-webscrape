@@ -43,7 +43,7 @@ def get_pokedex(native_pokedex_lst):
     Returns:
          a WebElement link that will later be clicked on.
     """
-    user_input = input("Select a number corresponding to the pokedex you wish to explore (0-17): ")
+    user_input = input("Select a number corresponding to the pokedex you wish to explore [0-17]: ")
     try:
         index = int(user_input)
         if index in range(0, 18):
