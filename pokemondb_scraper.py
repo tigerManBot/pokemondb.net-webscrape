@@ -60,6 +60,8 @@ def reformat_pokedex(pokedex):
     """
     Removes the portion of the pokedex string starting with the parenthesis.
     For example, FireRed & LeafGreen (Kanto) turns into FireRed & LeafGreen
+    The reason for this is that the link to the pokedex does not contain this text in the parenthesis.
+    Without reformatting, the link can not be clicked on.
     Arguments:
         pokedex: A WebElement link. Its text will be worked on in this function.
     Returns:
@@ -89,7 +91,7 @@ def main():
     browser.get("https://pokemondb.net/pokedex")
     sleep(1)
 
-    exit_privacy_control_popup(browser)     # get rid of the privacy popup if it pops up
+    exit_privacy_control_popup(browser)     # get rid of the privacy popup (if it pops up)
 
     # this page has a list of pokedexes to choose from
     native_pokedex_lst = browser.find_elements(By.TAG_NAME, "li")[68:86]
@@ -102,6 +104,7 @@ def main():
     reformatted_pokedex = reformat_pokedex(pokedex)  # as a string now
     browser.find_element(By.LINK_TEXT, reformatted_pokedex).click()
 
+    # For tommorow
     # open the pokemeon links, a class="ent-name" in a new tab
     # possibly switch views to the new tab if necessary
     # gather the specific data
