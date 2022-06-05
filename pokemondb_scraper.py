@@ -49,7 +49,7 @@ def get_pokedex(native_pokedex_lst):
         if index in range(0, 18):
             return native_pokedex_lst[index]
         else:
-            print(f"Error, {index} is outside of the expected range (0-17). Please try again.")
+            print(f"Error, {index} is outside of the expected range [0-17]. Please try again.")
             return get_pokedex(native_pokedex_lst)
     except ValueError:
         print(f"Error, {user_input} is not a number. Please try again.")
