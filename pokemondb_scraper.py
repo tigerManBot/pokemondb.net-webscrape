@@ -36,7 +36,7 @@ def display_pokedex_lst(native_pokedex_lst):
 
 def get_pokedex(native_pokedex_lst):
     """
-    Prompts the user to select the number that corresponds to the pokedex
+    Prompts the user to Enter the number that corresponds to the pokedex
     they wish to explore.
     Arguments:
         native_pokedex_lst: a list of WebElements, each containing a link to a pokedex on the page.
@@ -103,24 +103,6 @@ def main():
     pokedex = get_pokedex(native_pokedex_lst)   # a web element
     reformatted_pokedex = reformat_pokedex(pokedex)  # as a string now
     browser.find_element(By.LINK_TEXT, reformatted_pokedex).click()
-
-    # For tommorow
-    # open the pokemeon links, a class="ent-name" in a new tab
-    # possibly switch views to the new tab if necessary
-    # gather the specific data
-
-    # data to gather:
-    #
-
-    # loop through their type list (could just be one type)
-    # in loop: add the pokemon to a dictionary: Key: type, Value: List of pokemon with this type
-    # note, that the list of pokemon is a list of Pokemon (custom type) containing all relevant data
-
-    # this way th
-
-    # close this new tab, possibly switch views to main window
-    # begin on the next pokemon and so on
-    # test it in increments, (ie, test 3 pokemon, then test 5, then test 10, then test all)
 
     sleep(5)
     browser.quit()
