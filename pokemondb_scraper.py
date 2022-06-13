@@ -88,7 +88,7 @@ def main():
     print()
 
     # open up the pokedex page on pokemondb.net
-    browser = webdriver.Chrome()
+    browser = webdriver.Firefox()
     browser.get("https://pokemondb.net/pokedex")
     sleep(1)
 
