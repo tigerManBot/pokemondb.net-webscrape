@@ -12,12 +12,13 @@ def exit_privacy_control_popup(browser):
     On chrome there is a popup from the site about privacy and control.
     This function closes the popup (if it actually pops up).
     Arguments:
-        browser: selenium webdriver, for finding a web element on the page.
+        browser: WebDriver, for finding a web element on the page.
     """
     try:
         popup = browser.find_element(By.XPATH, './/a[@class = "text-small gdpr-decline"]')
         popup.click()
         sleep(1)
+        return
     except NoSuchElementException:
         sleep(1)
         return
@@ -70,7 +71,7 @@ def reformat_pokedex(pokedex):
     reformatted_pokedex = pokedex.text
     portion_to_remove_regex = re.compile(r"(\(.+)\)$")
     # regex: Left parenthesis + any combination of characters(except new line) after the left parenthesis
-    # + must end with right parenthesis
+    # and must end with right parenthesis
 
     match_obj = portion_to_remove_regex.search(pokedex.text)
     if match_obj:
@@ -96,13 +97,41 @@ def main():
     # this page has a list of pokedexes to choose from
     native_pokedex_lst = browser.find_elements(By.TAG_NAME, "li")[68:86]
     # 68-86 is the section of the list that contain the pokedex links
-    sleep(1)
+    sleep(2)
 
     # have the user select a pokedex, then click on the link corresponding to their selection
     display_pokedex_lst(native_pokedex_lst)
     pokedex = get_pokedex(native_pokedex_lst)   # a web element
     reformatted_pokedex = reformat_pokedex(pokedex)  # as a string now
     browser.find_element(By.LINK_TEXT, reformatted_pokedex).click()
+
+    # get ONLY the first 3 links f or all the pokemon
+    pokemon_links = browser.find_elements(By.XPATH, './/a[@class= "ent-name"]')[:1]
+
+    # SWITCH TO FUNCTION LATER
+    pokedex_by_type = {}    # Key: pokemon type, Value: list of WebElements (that link to pokemon of that type)
+    for pokemon in pokemon_links:
+        pokemon.send_keys(Keys.CONTROL, Keys.ENTER)   # open the link in new tab
+        sleep(1)
+        browser.switch_to.window(browser.window_handles[1])     # switch view to next tab
+        sleep(1)
+        types = browser.find_elements(By.XPATH, '//*[@id="tab-basic-387"]/div[1]/div[2]/table/tbody/tr[2]/td/a')
+        for pokemon_type in types:
+            print(f"Type: {pokemon_type.text.title()}")
+            if pokemon_type.text.title() not in pokedex_by_type:
+                # this avoids a KeyError and initalizes the list for this type of pokemon
+                pokedex_by_type[pokemon_type.text.title()] = []
+            pokedex_by_type[pokemon_type.text.title()].append(pokemon)
+
+        # switch back to main tab
+        browser.close()
+        sleep(1)
+        browser.switch_to.window(browser.window_handles[0])
+
+    print("Opening pokemon of grass type: ")
+    for pokemon in pokedex_by_type["Grass"]:
+        pokemon.click()
+        sleep(1)
 
     sleep(5)
     browser.quit()
