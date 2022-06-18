@@ -96,6 +96,7 @@ def get_national_number(browser):
     next_national_number_link = browser.find_element(By.CLASS_NAME, "entity-nav-next")
 
     # The next national number will be used to calculate the current one
+    # there is always a next national number so no need to worry about out of bounds index errors
     next_national_number = next_national_number_link.text.split()
     next_national_number = next_national_number[0].replace('#', '')     # necessary for converting to int
     return int(next_national_number) - 1
