@@ -101,20 +101,65 @@ def get_national_number(browser):
     return int(next_national_number) - 1
 
 
-def get_current_type(unformatted_type):
+def sort_pokedex(pokemon_links, browser):
     """
-    Reformates unormatted_type by:
-        -removing "Type" from the front
-        -There can at most be two types for any pokemon.
-        -Will keep it in all caps format as this is the format used throughout the site.
+    Sorts the pokedex by type, into a dictionary (Key: pokemon type, Value: List of WebElements that link to pokemon of
+    that type.)
+    For example, all grass pokemon will be stored as a list for the key "GRASS".
+    Any pokemon that has two types will be stored into each key.
+    For example, Torterra is a Grass-Ground type and is stored in both GRASS and GROUND keys.
+    The list is a list of WebElemenents (the link to that specific pokemon). Later on the user will select a type
+    they wish to explore. So if they choose "Fire" as the type, then all the links in the FIRE key will be openend.
     Arguments:
-        unformatted_type: str, containing "Type (pokemon types here)
-        For example, "Type GRASS GROUND"
+        pokemon_links: list of WebElements: each element is a link to a pokemon in the pokedex
+        browser: WebDriver, for finding a web element on the page.
+    Returns:
+        A dictionary containing all the pokemon sorted by type.
+        The dictionary is of the form:
+            Key: pokemon type (For example, "FIRE", "GRASS", etc.
+            Value: List of WebElements that link to pokemon of that type.
+                Later on the user will select a type they wish to explore. So if they choose "Fire" as the type, then
+                all the links in the FIRE key will be openend.
+    """
+    pokedex_by_type = {}  # Key: pokemon type, Value: list of WebElements (that link to pokemon of that type)
+    for pokemon in pokemon_links[:6]:  # just testing the first 4 for now
+        pokemon.send_keys(Keys.CONTROL, Keys.ENTER)  # open the link in new tab
+        sleep(1)
+        browser.switch_to.window(browser.window_handles[1])  # switch view to next tab
+        sleep(1)
+        # get the type data of the current pokemon
+        pokemon_types = get_current_types(browser)
+        # loop through the current pokemon's types, to add the pokemon to pokedex_by_type
+        for pokemon_type in pokemon_types:
+            if pokemon_type not in pokedex_by_type:
+                # this avoids a KeyError and initalizes the list for this type of pokemon
+                pokedex_by_type[pokemon_type] = []
+            pokedex_by_type[pokemon_type].append(pokemon)
+
+        # switch back to main tab
+        browser.close()
+        sleep(1)
+        browser.switch_to.window(browser.window_handles[0])
+
+    return pokedex_by_type
+
+
+def get_current_types(browser):
+    """
+    Gets the current pokemon's type(s) and returns it as a list.
+    A pokemon can have at most two types.
+    Arguments:
+        browser: WebDriver, for finding a web element on the page.
     Returns:
         a list of the pokemon types. Each element is a string and there can be at most two strings
     """
-    formatted_type = unformatted_type.replace("Type", '')
-    return formatted_type.split()
+    national_number = get_national_number(browser)  # needed in order to get the table data as the xpath for each table
+    # for each pokemon changes based on the national number.
+    table_data = browser.find_elements(By.XPATH, f'//*[@id="tab-basic-{national_number}"]/div[1]/div[2]/table')
+    table_data = table_data[0].text.split('\n')
+    formatted_types = table_data[1].replace("Type", '')
+    # For example, "Type GRASS GROUND" -> ["GRASS", "GROUND"]
+    return formatted_types.split()
 
 
 def main():
@@ -141,35 +186,12 @@ def main():
 
     # grab the links for every pokemon in the pokedex
     pokemon_links = browser.find_elements(By.XPATH, './/a[@class= "ent-name"]')
-    SIZE_OF_POKEDEX = len(pokemon_links)
 
-    # SWITCH TO FUNCTION LATER
-    pokedex_by_type = {}    # Key: pokemon type, Value: list of WebElements (that link to pokemon of that type)
-    for pokemon in pokemon_links[:4]:    # just testing the first 4
-        pokemon.send_keys(Keys.CONTROL, Keys.ENTER)   # open the link in new tab
-        sleep(1)
-        browser.switch_to.window(browser.window_handles[1])     # switch view to next tab
-        sleep(1)
-        # get the type data of the current pokemon
-        national_number = get_national_number(browser)
-        table_data = browser.find_elements(By.XPATH, f'//*[@id="tab-basic-{national_number}"]/div[1]/div[2]/table')
-        table_data = table_data[0].text.split('\n')
-        pokemon_types = get_current_type(table_data[1])
-        # loop through the current pokemon's types, to add the pokemon to pokedex_by_type
-        for pokemon_type in pokemon_types:
-            if pokemon_type not in pokedex_by_type:
-                # this avoids a KeyError and initalizes the list for this type of pokemon
-                pokedex_by_type[pokemon_type] = []
-            pokedex_by_type[pokemon_type].append(pokemon)
-
-        # switch back to main tab
-        browser.close()
-        sleep(1)
-        browser.switch_to.window(browser.window_handles[0])
+    sorted_pokedex = sort_pokedex(pokemon_links, browser)
 
     # TEST AREA
-    print("Opening pokemon of ground type: ")
-    for pokemon in pokedex_by_type["FIRE"]:
+    print("Opening pokemon of fire type: ")
+    for pokemon in sorted_pokedex["FIRE"]:
         pokemon.send_keys(Keys.CONTROL, Keys.ENTER)     # open in next tab
         sleep(2)
 
