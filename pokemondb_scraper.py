@@ -44,17 +44,17 @@ def get_pokedex(native_pokedex_lst):
     Returns:
          a WebElement link that will later be clicked on.
     """
-    user_input = input("Select a number corresponding to the pokedex you wish to explore [0-17]: ")
-    try:
-        index = int(user_input)
-        if index in range(0, 18):
-            return native_pokedex_lst[index]
-        else:
-            print(f"Error, {index} is outside of the expected range [0-17]. Please try again.")
-            return get_pokedex(native_pokedex_lst)
-    except ValueError:
-        print(f"Error, {user_input} is not a number. Please try again.")
-        return get_pokedex(native_pokedex_lst)
+    while True:
+        user_input = input("Enter a number corresponding to the pokedex you wish to explore [0-16]: ")
+        try:
+            index = int(user_input)
+            if index in range(0, 17):
+                return native_pokedex_lst[index]
+            else:
+                print(f"Error, {index} is outside of the expected range [0-16]. Please try again.")
+                return get_pokedex(native_pokedex_lst)
+        except ValueError:
+            print(f"Error, {user_input} is not a number. Please try again.")
 
 
 def reformat_pokedex(pokedex):
@@ -84,6 +84,39 @@ def reformat_pokedex(pokedex):
     return reformatted_pokedex
 
 
+def get_national_number(browser):
+    """" Grabs the national number for the current pokemeon.
+    The current national number is an int needed to get the current pokemon's table data.
+    Note, this number is different from the normal pokedex id.
+    Arguments:
+        browser: WebDriver, for finding a web element on the page.
+    Returns:
+       the national number of the current pokemon as an int.
+    """
+    next_national_number_link = browser.find_element(By.CLASS_NAME, "entity-nav-next")
+
+    # The next national number will be used to calculate the current one
+    next_national_number = next_national_number_link.text.split()
+    next_national_number = next_national_number[0].replace('#', '')     # necessary for converting to int
+    return int(next_national_number) - 1
+
+
+def get_current_type(unformatted_type):
+    """
+    Reformates unormatted_type by:
+        -removing "Type" from the front
+        -There can at most be two types for any pokemon.
+        -Will keep it in all caps format as this is the format used throughout the site.
+    Arguments:
+        unformatted_type: str, containing "Type (pokemon types here)
+        For example, "Type GRASS GROUND"
+    Returns:
+        a list of the pokemon types. Each element is a string and there can be at most two strings
+    """
+    formatted_type = unformatted_type.replace("Type", '')
+    return formatted_type.split()
+
+
 def main():
     print()
 
@@ -95,9 +128,10 @@ def main():
     exit_privacy_control_popup(browser)     # get rid of the privacy popup (if it pops up)
 
     # this page has a list of pokedexes to choose from
-    native_pokedex_lst = browser.find_elements(By.TAG_NAME, "li")[68:86]
-    # 68-86 is the section of the list that contain the pokedex links
-    sleep(2)
+    native_pokedex_lst = browser.find_elements(By.TAG_NAME, "li")[69:86]
+    # 69-86 is the section of the list that contain the pokedex links
+    # it excludes the national pokedex (this includes all the pokedex in all games, so it will break things)
+    sleep(1)
 
     # have the user select a pokedex, then click on the link corresponding to their selection
     display_pokedex_lst(native_pokedex_lst)
@@ -105,33 +139,39 @@ def main():
     reformatted_pokedex = reformat_pokedex(pokedex)  # as a string now
     browser.find_element(By.LINK_TEXT, reformatted_pokedex).click()
 
-    # get ONLY the first 3 links f or all the pokemon
-    pokemon_links = browser.find_elements(By.XPATH, './/a[@class= "ent-name"]')[:1]
+    # grab the links for every pokemon in the pokedex
+    pokemon_links = browser.find_elements(By.XPATH, './/a[@class= "ent-name"]')
+    SIZE_OF_POKEDEX = len(pokemon_links)
 
     # SWITCH TO FUNCTION LATER
     pokedex_by_type = {}    # Key: pokemon type, Value: list of WebElements (that link to pokemon of that type)
-    for pokemon in pokemon_links:
+    for pokemon in pokemon_links[:4]:    # just testing the first 4
         pokemon.send_keys(Keys.CONTROL, Keys.ENTER)   # open the link in new tab
         sleep(1)
         browser.switch_to.window(browser.window_handles[1])     # switch view to next tab
         sleep(1)
-        types = browser.find_elements(By.XPATH, '//*[@id="tab-basic-387"]/div[1]/div[2]/table/tbody/tr[2]/td/a')
-        for pokemon_type in types:
-            print(f"Type: {pokemon_type.text.title()}")
-            if pokemon_type.text.title() not in pokedex_by_type:
+        # get the type data of the current pokemon
+        national_number = get_national_number(browser)
+        table_data = browser.find_elements(By.XPATH, f'//*[@id="tab-basic-{national_number}"]/div[1]/div[2]/table')
+        table_data = table_data[0].text.split('\n')
+        pokemon_types = get_current_type(table_data[1])
+        # loop through the current pokemon's types, to add the pokemon to pokedex_by_type
+        for pokemon_type in pokemon_types:
+            if pokemon_type not in pokedex_by_type:
                 # this avoids a KeyError and initalizes the list for this type of pokemon
-                pokedex_by_type[pokemon_type.text.title()] = []
-            pokedex_by_type[pokemon_type.text.title()].append(pokemon)
+                pokedex_by_type[pokemon_type] = []
+            pokedex_by_type[pokemon_type].append(pokemon)
 
         # switch back to main tab
         browser.close()
         sleep(1)
         browser.switch_to.window(browser.window_handles[0])
 
-    print("Opening pokemon of grass type: ")
-    for pokemon in pokedex_by_type["Grass"]:
-        pokemon.click()
-        sleep(1)
+    # TEST AREA
+    print("Opening pokemon of ground type: ")
+    for pokemon in pokedex_by_type["FIRE"]:
+        pokemon.send_keys(Keys.CONTROL, Keys.ENTER)     # open in next tab
+        sleep(2)
 
     sleep(5)
     browser.quit()
