@@ -11,9 +11,10 @@ Then, the user can enter a type they wish to explore and the program opens a new
 
 Basic Performance Notes
 -----------------------
-The initial sorting phase takese about three minutes to get done. Each pokemon link is clicked and some data is taken 
-from each. There are around 150 pokemon in most pokedexes (a few have much more), 
-so this about 150 clicks that have to happen in this phase. 
+The initial sorting phase takes about three minutes to get done. Each pokemon link is opened in a new tab and some data
+is taken from each, followed by closing the tab.  
+There are around 150 pokemon in most pokedexes (a few have much more), 
+so this operation obviously happens around 150 times.
 
 
 Why tho
