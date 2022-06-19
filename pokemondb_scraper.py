@@ -17,10 +17,8 @@ def exit_privacy_control_popup(browser):
     try:
         popup = browser.find_element(By.XPATH, './/a[@class = "text-small gdpr-decline"]')
         popup.click()
-        sleep(1)
         return
     except NoSuchElementException:
-        sleep(1)
         return
 
 
@@ -102,7 +100,7 @@ def get_national_number(browser):
     return int(next_national_number) - 1
 
 
-def sort_pokedex(pokemon_links, browser):
+def sort_pokedex(pokemon_links, browser, pokedex_name):
     """
     Sorts the pokedex by type, into a dictionary (Key: pokemon type, Value: List of WebElements that link to pokemon of
     that type.)
@@ -114,6 +112,7 @@ def sort_pokedex(pokemon_links, browser):
     Arguments:
         pokemon_links: list of WebElements: each element is a link to a pokemon in the pokedex
         browser: WebDriver, for finding a web element on the page.
+        pokedex_name: str, the name of the pokedex that will be explored.
     Returns:
         A dictionary containing all the pokemon sorted by type.
         The dictionary is of the form:
@@ -123,9 +122,9 @@ def sort_pokedex(pokemon_links, browser):
                 all the links in the FIRE key will be openend.
     """
     pokedex_by_type = {}  # Key: pokemon type, Value: list of WebElements (that link to pokemon of that type)
-    for pokemon in pokemon_links[:6]:  # just testing the first 4 for now
+    print(f"\nGathering data from the entire {pokedex_name} pokedex! This will take a few minutes.")
+    for pokemon in pokemon_links:
         pokemon.send_keys(Keys.CONTROL, Keys.ENTER)  # open the link in new tab
-        sleep(1)
         browser.switch_to.window(browser.window_handles[1])  # switch view to next tab
         sleep(1)
         # get the type data of the current pokemon
@@ -136,10 +135,8 @@ def sort_pokedex(pokemon_links, browser):
                 # this avoids a KeyError and initalizes the list for this type of pokemon
                 pokedex_by_type[pokemon_type] = []
             pokedex_by_type[pokemon_type].append(pokemon)
-
         # switch back to main tab
         browser.close()
-        sleep(1)
         browser.switch_to.window(browser.window_handles[0])
 
     return pokedex_by_type
@@ -163,40 +160,74 @@ def get_current_types(browser):
     return formatted_types.split()
 
 
+def explore_by_type(sorted_pokedex, browser):
+    """
+    The user enters a pokemon type they wish to explore.
+    This function then opens all the links for pokemon who matche the entered type.
+    The user can continue with another type or exit the program from here.
+    Arguments:
+        sorted_pokedex: a dictionary of pokemon sorted by their type.
+        browser: WebDriver, for finding a web element on the page.
+    """
+    user_reply = 'y'
+    while user_reply == 'y':
+        type_to_explore = input("\nEnter a pokemon type to explore: ")
+        reformatted_type = type_to_explore.upper()
+        if reformatted_type not in sorted_pokedex:
+            print(f"Error, {type_to_explore} is not a valid pokemon type in the selected pokedex.\nPlease try again.")
+            return explore_by_type(sorted_pokedex, browser)
+        else:
+            print(f"\nOpenining the links for all {type_to_explore} pokemon.")
+            for pokemon in sorted_pokedex[reformatted_type]:
+                pokemon.send_keys(Keys.CONTROL, Keys.ENTER)     # open in next tab
+                sleep(1)
+
+        close_tabs(browser)
+        user_reply = input("Would you like to explore another type? Quiting will end the program.\n"
+                           "Enter Y/y or N/n: ").lower()
+
+
+def close_tabs(browser):
+    """
+    When the user is ready, this will close all of the opened tabs.
+    Arguments:
+        browser: WebDriver, for finding a web element on the page.
+    """
+    user_input = input("When you're ready, press enter to close the opened tabs: ")
+    for opened_tab in browser.window_handles[1:]:
+        browser.switch_to.window(opened_tab)
+        browser.close()
+
+    browser.switch_to.window(browser.window_handles[0])
+
+
 def main():
     print()
 
     # open up the pokedex page on pokemondb.net
     browser = webdriver.Firefox()
     browser.get("https://pokemondb.net/pokedex")
-    sleep(1)
 
     exit_privacy_control_popup(browser)     # get rid of the privacy popup (if it pops up)
 
     # this page has a list of pokedexes to choose from
     native_pokedex_lst = browser.find_elements(By.TAG_NAME, "li")[69:86]
-    # 69-86 is the section of the list that contain the pokedex links
-    # it excludes the national pokedex (this includes all the pokedex in all games, so it will break things)
-    sleep(1)
+    # it excludes the national pokedex (this includes all the pokedex in all games, which would take too long)
 
     # have the user select a pokedex, then click on the link corresponding to their selection
     display_pokedex_lst(native_pokedex_lst)
-    pokedex = get_pokedex(native_pokedex_lst)   # a web element
+    pokedex = get_pokedex(native_pokedex_lst)   # a WebElement, a link
     reformatted_pokedex = reformat_pokedex(pokedex)  # as a string now
     browser.find_element(By.LINK_TEXT, reformatted_pokedex).click()
 
     # grab the links for every pokemon in the pokedex
     pokemon_links = browser.find_elements(By.XPATH, './/a[@class= "ent-name"]')
 
-    sorted_pokedex = sort_pokedex(pokemon_links, browser)
+    sorted_pokedex = sort_pokedex(pokemon_links, browser, reformatted_pokedex)
 
-    # TEST AREA
-    print("Opening pokemon of fire type: ")
-    for pokemon in sorted_pokedex["FIRE"]:
-        pokemon.send_keys(Keys.CONTROL, Keys.ENTER)     # open in next tab
-        sleep(2)
+    explore_by_type(sorted_pokedex, browser)
 
-    sleep(5)
+    sleep(1)
     browser.quit()
 
 
