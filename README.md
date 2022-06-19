@@ -9,6 +9,13 @@ Then, the user can enter a type they wish to explore and the program opens a new
  of that requested type.  
 
 
+Basic Performance Notes
+-----------------------
+The initial sorting phase takese about three minutes to get done. Each pokemon link is clicked and some data is taken 
+from each. There are around 150 pokemon in most pokedexes (a few have much more), 
+so this about 150 clicks that have to happen in this phase. 
+
+
 Why tho
 -------
 When I was a kid I used to like to use sites like this to plan my team for my playthroughs.  
@@ -19,9 +26,5 @@ So if I wanted to look at all the fire type pokemon, I would have to manually go
 This program does that instantly for me.
 
 
-Basic Performance Notes
------------------------
-The initial sorting phase takese about three minutes to get done. Each pokemon link is clicked and some data is taken 
-from each. There are around 150 pokemon in most pokedexes (a few have much more), 
-so this about 150 clicks that have to happen in this phase. 
+
 
