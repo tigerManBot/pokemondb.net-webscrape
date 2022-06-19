@@ -1,7 +1,8 @@
 Description
 -----------
 This project is a webscraper for the pokemon website pokemondb.net.  
-The user can select one of 17 possible pokedexes and the program then sorts that pokedex by pokemon type.    
+The user can select one of 17 possible pokedexes and the program then sorts that pokedex by pokemon type into
+a dictionary.  
 For example, the fire pokemon are all placed together and so on.  
 Any pokemon with two types is placed into two lists.  
 Then, the user can enter a type they wish to explore and the program opens a new tab for every pokemon
