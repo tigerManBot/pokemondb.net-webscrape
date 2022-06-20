@@ -50,7 +50,6 @@ def get_pokedex(native_pokedex_lst):
                 return native_pokedex_lst[index]
             else:
                 print(f"Error, {index} is outside of the expected range [0-16]. Please try again.")
-                return get_pokedex(native_pokedex_lst)
         except ValueError:
             print(f"Error, {user_input} is not a number. Please try again.")
 
