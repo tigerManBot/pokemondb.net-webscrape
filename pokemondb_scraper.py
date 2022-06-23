@@ -188,7 +188,8 @@ def explore_by_type(sorted_pokedex, browser):
 
 def close_tabs(browser):
     """
-    When the user is ready, this will close all of the opened tabs.
+    When the user is ready, this will close all of the opened tabs except for the main tab which contains the current
+    pokedex.
     Arguments:
         browser: WebDriver, for finding a web element on the page.
     """
